@@ -1,0 +1,52 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - app-network
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wp_app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    env_file: .env
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+    networks:
+      - app-network
+    volumes:
+      - wp_data:/var/www/html
+    depends_on:
+      - db
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin_app
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "8081:80"
+    networks:
+      - app-network
+    depends_on:
+      - db
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  wp_data:

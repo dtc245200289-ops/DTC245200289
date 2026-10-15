@@ -1,0 +1,51 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: wp_prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=3d
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+      - wordpress
+    mem_limit: 384m
+    cpus: 0.50
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:0.57.0
+    container_name: wp_cadvisor
+    restart: unless-stopped
+    privileged: true
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=30s
+      - --store_container_labels=false
+      - --disable_metrics=disk
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    networks:
+      - monitoring
+    mem_limit: 256m
+    cpus: 0.50
+
+networks:
+  monitoring:
+    external: true
+    name: kn3_monitoring
+  wordpress:
+    external: true
+    name: doan-wordpress-docker_app-network
+
+volumes:
+  prometheus_data:

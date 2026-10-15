@@ -1,3 +1,14 @@
 .env
 mysql_data/
 wp_data/
+
+# Local secrets and TLS private keys
+*.key
+*.pem
+.env.*
+!.env.example
+
+# Backups and local runtime data
+*.bak
+*.sql
+*.sql.gz
