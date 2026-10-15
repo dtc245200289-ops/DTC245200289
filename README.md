@@ -54,13 +54,26 @@ Nginx, Loki và Promtail được quản lý riêng trên máy chủ hoặc tron
 ```text
 .
 ├── docker-compose.yml
+├── nginx/
+│   └── demo.local.conf.example
 ├── monitoring/
 │   ├── compose.yml
 │   └── prometheus.yml
 ├── .gitignore
 └── README.md
 ```
+## Cấu hình Nginx
 
+File `nginx/demo.local.conf.example` là cấu hình mẫu cho Nginx trên máy chủ.
+
+Cấu hình thực hiện:
+- Chuyển hướng HTTP sang HTTPS.
+- Reverse proxy đến WordPress tại `127.0.0.1:8080`.
+- Thêm bốn HTTP security headers.
+
+File mẫu tham chiếu chứng chỉ tại `/etc/nginx/ssl/`. Các đường dẫn này phải phù hợp với chứng chỉ đã cài trên máy triển khai. Không commit private key hoặc thông tin bí mật vào Git.
+
+Nginx hiện chạy trực tiếp trên máy chủ Ubuntu, không thuộc dịch vụ Nginx trong Docker Compose của dự án.
 ## 5. Yêu cầu môi trường
 
 * Linux hoặc môi trường tương thích Docker.
