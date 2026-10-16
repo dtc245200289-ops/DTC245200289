@@ -219,7 +219,7 @@ cAdvisor cần quyền truy cập vào một số tài nguyên của máy chủ 
 | Prometheus và cAdvisor | PASS | Prometheus ready; cả hai scrape targets ở trạng thái up |
 | Grafana CPU/RAM | PASS | Dashboard hiển thị dữ liệu |
 | Loki và LogQL | PASS | Đã truy vấn được log WordPress |
-| Git | PARTIAL | Đã push commit lên GitHub; cần kiểm tra lịch sử để xác nhận không có bí mật bị commit trước đó |
+| Git | PASS (kiểm tra cơ bản) | Đã push lên GitHub; working tree sạch; không tìm thấy .env, SQL, .key hoặc .pem theo các mẫu tìm kiếm trong lịch sử Git đã kiểm tra |
 
 Các kết quả trên phản ánh môi trường lab hiện tại, chưa chứng minh việc triển khai thành công từ một máy hoàn toàn mới.
 
@@ -227,9 +227,15 @@ Các kết quả trên phản ánh môi trường lab hiện tại, chưa chứn
 
 * Kiểm tra đăng nhập WordPress quản trị và chức năng website sau khi khởi động lại.
 * Thử quy trình triển khai từ máy mới bằng cấu hình và hướng dẫn trong README.
-* Kiểm tra backup và khôi phục dữ liệu.
-* Chụp ảnh minh chứng cho HTTPS, Grafana, Prometheus targets và truy vấn LogQL.
 * Đánh giá quyền truy cập dịch vụ monitoring và bảo mật mạng trước khi triển khai ra ngoài môi trường lab.
+
+### Kiểm thử backup và khôi phục dữ liệu
+
+* Đã tạo bản sao lưu database `wordpress_db` bằng `mysqldump`, lưu ngoài repository tại `~/wordpress-backups/`.
+* Đã khôi phục bản dump vào database thử nghiệm riêng `wordpress_restore_test`, không ghi đè database đang được WordPress sử dụng.
+* Kết quả kiểm tra: 12 bảng sau khôi phục; số bài viết khớp 6/6 và số người dùng khớp 1/1 giữa database gốc và database thử nghiệm.
+* Lệnh khôi phục kết thúc với exit code 0.
+* Phạm vi kiểm thử mới đối chiếu cấu trúc bảng và số lượng bài viết, người dùng; chưa so sánh toàn bộ dữ liệu của mọi bảng.
 
 Chỉ đánh dấu các hạng mục còn lại là hoàn thành khi đã có kết quả kiểm thử thực tế.
 
