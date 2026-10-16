@@ -59,6 +59,8 @@ Nginx, Loki và Promtail được quản lý riêng trên máy chủ hoặc tron
 ├── monitoring/
 │   ├── compose.yml
 │   └── prometheus.yml
+├── php-config/
+│   └── 99-security.ini
 ├── .gitignore
 └── README.md
 ```
@@ -187,14 +189,16 @@ Kết quả truy vấn phụ thuộc vào log thực tế trong khoảng thời 
 
 ## 10. Biện pháp bảo mật
 
-Các biện pháp đã được cấu hình hoặc cần kiểm tra trong môi trường triển khai:
+### Các biện pháp đã cấu hình và kiểm tra
 
-* Chuyển hướng HTTP sang HTTPS bằng Nginx.
-* Sử dụng TLS certificate có Subject Alternative Name phù hợp với tên miền.
-* Thiết lập các HTTP security headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` và `Permissions-Policy`.
-* Bind cổng WordPress vào `127.0.0.1:8080` để hạn chế truy cập trực tiếp từ mạng bên ngoài.
-* Lưu thông tin đăng nhập trong `.env` và loại trừ file này khỏi Git.
-* Hạn chế quyền truy cập vào các dịch vụ giám sát và giao diện quản trị.
+* HTTP tự chuyển hướng sang HTTPS.
+* TLS certificate có Subject Alternative Name (SAN) cho `demo.local`; đã kiểm tra truy cập HTTPS trong môi trường hiện tại.
+* Bốn HTTP security headers đã được xác minh: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` và `Permissions-Policy`.
+* WordPress chỉ bind vào `127.0.0.1:8080`.
+* phpMyAdmin chỉ bind vào `127.0.0.1:8081`; đã xác nhận giao diện truy cập được và nhìn thấy database `wordpress_db`.
+* File `php-config/99-security.ini` đặt `expose_php = Off`; đã xác minh header `X-Powered-By` không còn xuất hiện trong phản hồi HTTPS.
+* File `.env` được khai báo trong `.gitignore`. Cần tiếp tục kiểm tra lịch sử Git trước khi kết luận không có bí mật từng bị commit.
+* Cần đánh giá thêm quyền truy cập các dịch vụ monitoring và bảo mật mạng khi triển khai trên máy khác.
 
 Chứng chỉ CA tự tạo chỉ được tin cậy trên thiết bị đã cài đặt CA tương ứng. Không xem chứng chỉ tự ký hoặc CA nội bộ là chứng chỉ công khai được mọi trình duyệt tin cậy.
 
@@ -202,19 +206,32 @@ cAdvisor cần quyền truy cập vào một số tài nguyên của máy chủ 
 
 ## 11. Kiểm thử và nghiệm thu
 
-Các hạng mục cần kiểm tra:
+### Kết quả đã xác minh trong môi trường hiện tại
 
-* WordPress truy cập được qua HTTPS.
-* HTTP được chuyển hướng sang HTTPS.
-* MySQL hoạt động và WordPress kết nối được cơ sở dữ liệu.
-* phpMyAdmin truy cập được và đăng nhập đúng quyền.
-* Prometheus thu thập metrics từ cAdvisor.
-* Dashboard Grafana hiển thị dữ liệu CPU và RAM.
-* Loki truy vấn được log WordPress.
-* Các security headers xuất hiện trong HTTP response.
-* Git không chứa file `.env`, token hoặc private key.
+| Hạng mục | Kết quả | Bằng chứng |
+|---|---|---|
+| WordPress qua HTTPS | PASS | HTTPS trả về HTTP 200 |
+| HTTP chuyển sang HTTPS | PASS | HTTP trả về HTTP 301 |
+| HTTP security headers | PASS | Đã xác minh đủ bốn header |
+| Ẩn phiên bản PHP | PASS | `expose_php = Off`; không thấy `X-Powered-By` |
+| WordPress và MySQL | PASS | Hai container đang chạy |
+| phpMyAdmin | PASS | Truy cập được `wordpress_db` qua cổng localhost |
+| Prometheus và cAdvisor | PASS | Prometheus ready; cả hai scrape targets ở trạng thái up |
+| Grafana CPU/RAM | PASS | Dashboard hiển thị dữ liệu |
+| Loki và LogQL | PASS | Đã truy vấn được log WordPress |
+| Git | PARTIAL | Đã push commit lên GitHub; cần kiểm tra lịch sử để xác nhận không có bí mật bị commit trước đó |
 
-Chỉ đánh dấu một hạng mục hoàn thành sau khi có kết quả kiểm thử thực tế.
+Các kết quả trên phản ánh môi trường lab hiện tại, chưa chứng minh việc triển khai thành công từ một máy hoàn toàn mới.
+
+### Các hạng mục cần kiểm tra thêm
+
+* Kiểm tra đăng nhập WordPress quản trị và chức năng website sau khi khởi động lại.
+* Thử quy trình triển khai từ máy mới bằng cấu hình và hướng dẫn trong README.
+* Kiểm tra backup và khôi phục dữ liệu.
+* Chụp ảnh minh chứng cho HTTPS, Grafana, Prometheus targets và truy vấn LogQL.
+* Đánh giá quyền truy cập dịch vụ monitoring và bảo mật mạng trước khi triển khai ra ngoài môi trường lab.
+
+Chỉ đánh dấu các hạng mục còn lại là hoàn thành khi đã có kết quả kiểm thử thực tế.
 
 ## 12. Quản lý mã nguồn
 
