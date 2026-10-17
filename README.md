@@ -44,7 +44,8 @@ Promtail thu thập log container và gửi đến Loki. Grafana sử dụng Lok
 ### Các thành phần triển khai
 
 * `docker-compose.yml`: cấu hình WordPress, MySQL và phpMyAdmin.
-* `monitoring/compose.yml`: cấu hình Prometheus và cAdvisor.
+* `monitoring/compose.yml`: cấu hình Prometheus, cAdvisor, MySQL Exporter và Blackbox Exporter.
+* `monitoring/blackbox.yml`: cấu hình kiểm tra khả năng truy cập HTTPS.
 * `monitoring/prometheus.yml`: cấu hình các mục tiêu thu thập metrics.
 * `logging/compose.yml`: cấu hình Loki và Promtail.
 * `logging/loki-config.yml`: cấu hình Loki.
@@ -140,7 +141,7 @@ docker compose -f monitoring/compose.yml config -q
 docker compose -f monitoring/compose.yml up -d
 ```
 
-Prometheus được cấu hình thu thập metrics từ chính nó và cAdvisor.
+Prometheus thu thập metrics từ chính nó, cAdvisor và MySQL Exporter. Blackbox Exporter kiểm tra khả năng truy cập HTTPS của `https://demo.local`. Target `nginx_https` kiểm tra tính sẵn sàng HTTP/HTTPS, không phải metrics nội bộ chuyên biệt của Nginx.
 
 Trong Grafana, thêm Prometheus datasource với URL phù hợp với mạng Docker, ví dụ:
 
