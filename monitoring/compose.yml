@@ -39,6 +39,39 @@ services:
     mem_limit: 256m
     cpus: 0.50
 
+
+  mysql-exporter:
+    image: prom/mysqld-exporter:v0.17.2
+    container_name: wp_mysql_exporter
+    restart: unless-stopped
+    group_add:
+      - "20000"
+    command:
+      - --config.my-cnf=/etc/mysql-exporter.cnf
+    volumes:
+      - ./mysql-exporter.cnf:/etc/mysql-exporter.cnf:ro
+    networks:
+      - monitoring
+      - wordpress
+    mem_limit: 128m
+    cpus: 0.25
+
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.27.0
+    container_name: wp_blackbox_exporter
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox_exporter/blackbox.yml
+    extra_hosts:
+      - "demo.local:host-gateway"
+    volumes:
+      - ./blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    networks:
+      - monitoring
+    mem_limit: 128m
+    cpus: 0.25
+
 networks:
   monitoring:
     external: true

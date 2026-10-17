@@ -46,8 +46,11 @@ Promtail thu thập log container và gửi đến Loki. Grafana sử dụng Lok
 * `docker-compose.yml`: cấu hình WordPress, MySQL và phpMyAdmin.
 * `monitoring/compose.yml`: cấu hình Prometheus và cAdvisor.
 * `monitoring/prometheus.yml`: cấu hình các mục tiêu thu thập metrics.
+* `logging/compose.yml`: cấu hình Loki và Promtail.
+* `logging/loki-config.yml`: cấu hình Loki.
+* `logging/promtail-config.yml`: cấu hình Promtail.
 
-Nginx, Loki và Promtail được quản lý riêng trên máy chủ hoặc trong môi trường monitoring hiện có; không phải tất cả dịch vụ đều được khởi chạy từ cùng một file Compose.
+Nginx hiện chạy trực tiếp trên máy chủ Ubuntu. Loki và Promtail đang chạy trong môi trường monitoring hiện có. Các file trong `logging/` đã được tạo và kiểm tra cú pháp Compose nhưng chưa được dùng để tái triển khai các container đang chạy. Cần xác minh project, network và volume trước khi áp dụng cấu hình mới.
 
 ## 4. Cấu trúc thư mục
 
@@ -163,7 +166,13 @@ Cần xác nhận trạng thái target trong Prometheus và dữ liệu hiển t
 
 ## 9. Thu thập và truy vấn log
 
-Grafana sử dụng Loki datasource để truy vấn log được Promtail thu thập.
+Promtail phát hiện container Docker, gắn nhãn container/service và gửi log đến Loki. Grafana sử dụng Loki datasource để truy vấn log.
+
+Kiểm tra cú pháp Compose logging mà không khởi động lại dịch vụ:
+
+    docker compose -f logging/compose.yml config -q
+
+Trong môi trường lab hiện tại, truy vấn Loki với selector `{container="wp_app"}` đã trả về log WordPress. Bằng chứng thực tế gồm yêu cầu `GET /` có HTTP 301 và yêu cầu `POST /wp-cron.php` có HTTP 200. Điều này xác nhận log WordPress đã được chuyển đến Loki và truy vấn được.
 
 Các truy vấn LogQL tham khảo:
 
@@ -262,3 +271,18 @@ Không commit mật khẩu, token, private key hoặc dữ liệu nhạy cảm.
 * Bổ sung quy trình backup và khôi phục dữ liệu.
 * Kiểm tra phân quyền, bảo mật mạng và độ ổn định của các dịch vụ.
 * Ghi nhận kết quả kiểm thử và tài nguyên sử dụng trong báo cáo nghiệm thu.
+
+### Kết quả xác minh monitoring bổ sung (18/10/2026)
+
+Lượt kiểm tra gần nhất ghi nhận các target Prometheus sau đều ở trạng thái `UP`:
+
+- `prometheus`: giám sát Prometheus.
+- `cadvisor`: thu thập metrics tài nguyên container.
+- `mysql`: MySQL Exporter kết nối được tới database; truy vấn `mysql_up` trả về `1`.
+- `nginx_https`: Blackbox Exporter kiểm tra `https://demo.local`; truy vấn `probe_success{job="nginx_https"}` trả về `1`.
+
+**Phạm vi giám sát:** `nginx_https` kiểm tra khả năng truy cập HTTPS và mã phản hồi HTTP mong đợi, không phải metrics nội bộ chuyên biệt của Nginx.
+
+**Lưu ý TLS:** Blackbox probe hiện đặt `insecure_skip_verify: true` để tương thích với chứng chỉ tự ký của môi trường lab. Thiết lập này không xác minh chuỗi chứng chỉ và cần được xem xét lại nếu triển khai production.
+
+File credentials của MySQL Exporter nằm tại `monitoring/mysql-exporter.cnf`, được loại khỏi Git bằng `.gitignore`. Không commit file này hoặc bất kỳ file `.env`, private key hay mật khẩu nào.

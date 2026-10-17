@@ -12,3 +12,4 @@ wp_data/
 *.bak
 *.sql
 *.sql.gz
+/monitoring/mysql-exporter.cnf
