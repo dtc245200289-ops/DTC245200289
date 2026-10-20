@@ -40,3 +40,4 @@ volumes:
   loki_data:
     external: true
     name: kn3_loki_data
+
