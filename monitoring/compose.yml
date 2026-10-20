@@ -39,7 +39,6 @@ services:
     mem_limit: 256m
     cpus: 0.50
 
-
   mysql-exporter:
     image: prom/mysqld-exporter:v0.17.2
     container_name: wp_mysql_exporter
@@ -56,7 +55,6 @@ services:
     mem_limit: 128m
     cpus: 0.25
 
-
   blackbox-exporter:
     image: prom/blackbox-exporter:v0.27.0
     container_name: wp_blackbox_exporter
@@ -72,6 +70,18 @@ services:
     mem_limit: 128m
     cpus: 0.25
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+      - wordpress
+
 networks:
   monitoring:
     external: true
@@ -82,3 +92,4 @@ networks:
 
 volumes:
   prometheus_data:
+  grafana_data:
