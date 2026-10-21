@@ -26,6 +26,7 @@ services:
     volumes:
       - wp_data:/var/www/html
       - ./php-config/99-security.ini:/usr/local/etc/php/conf.d/99-security.ini:ro
+      - ./wordpress-theme/nova-showcase:/var/www/html/wp-content/themes/nova-showcase:ro
     depends_on:
       - db
 
