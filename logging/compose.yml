@@ -1,4 +1,4 @@
-name: kn3
+version: '3.8'
 
 services:
   loki:
@@ -6,14 +6,14 @@ services:
     container_name: loki
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3100:3100"
+      - "3100:3100"
     volumes:
       - ./loki-config.yml:/etc/loki/loki-config.yaml:ro
       - loki_data:/loki
     command:
       - -config.file=/etc/loki/loki-config.yaml
     networks:
-      - monitoring
+      - doan_network
 
   promtail:
     image: grafana/promtail:latest
@@ -21,23 +21,20 @@ services:
     user: root
     restart: unless-stopped
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     command:
       - -config.file=/etc/promtail/config.yml
     networks:
-      - monitoring
+      - doan_network
     depends_on:
       - loki
 
 networks:
-  monitoring:
+  doan_network:
     external: true
-    name: kn3_monitoring
 
 volumes:
   loki_data:
-    external: true
-    name: kn3_loki_data
-
+    name: nova_loki_data
